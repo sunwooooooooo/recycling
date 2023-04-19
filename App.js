@@ -14,8 +14,8 @@ async function callGoogleVisionAsync(image) {
         },
         features: [
           {
-            type: "LABEL_DETECTION",
-            maxResults: 1,
+            type: "OBJECT_LOCALIZATION",
+            maxResults: 50,
           },
         ],
         imageContext: {
@@ -36,7 +36,15 @@ async function callGoogleVisionAsync(image) {
   const result = await response.json();
   console.log("callGoogleVisionAsync -> result", result);
 
-  return result.responses[0].labelAnnotations[0].description;
+  let objectNames = "";
+  result.responses[0].localizedObjectAnnotations.forEach((obj, index) => {
+    objectNames += obj.name;
+    if (index < result.responses[0].localizedObjectAnnotations.length - 1) {
+      objectNames += ", ";
+    }
+  });
+
+  return objectNames;
 }
 
 export default function App() {
