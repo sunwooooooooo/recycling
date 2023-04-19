@@ -18,9 +18,6 @@ async function callGoogleVisionAsync(image) {
             maxResults: 50,
           },
         ],
-        imageContext: {
-          languageHints: ['ko']
-        }
       },
     ],
   };
@@ -36,20 +33,15 @@ async function callGoogleVisionAsync(image) {
   const result = await response.json();
   console.log("callGoogleVisionAsync -> result", result);
 
-  let objectNames = "";
-  result.responses[0].localizedObjectAnnotations.forEach((obj, index) => {
-    objectNames += obj.name;
-    if (index < result.responses[0].localizedObjectAnnotations.length - 1) {
-      objectNames += ", ";
-    }
-  });
-
-  return objectNames;
+  return result.responses[0].localizedObjectAnnotations[0].name;
 }
 
 export default function App() {
   const [image, setImage] = React.useState(null);
   const [status, setStatus] = React.useState(null);
+
+  const mysql = require('mysql2');
+
 
   const takePictureAsync = async () => {
     const { canceled, assets } = await ImagePicker.launchCameraAsync({
@@ -60,6 +52,8 @@ export default function App() {
       base64: true,
     });
 
+
+
     if (!canceled) {
       const base64 = assets[0].base64;
       setImage(`data:image/jpg;base64,${base64}`);
@@ -67,6 +61,25 @@ export default function App() {
       try {
         const result = await callGoogleVisionAsync(base64);
         setStatus(result);
+
+        const connection = mysql.createConnection({
+          host: 'localhost',
+          port: 3306,
+          user: 'root',
+          password: 'sunwoo2001!',
+          database: 'mean'
+        });
+        
+        connection.query('SELECT description FROM objects', (error, results) => {
+          if (error) {
+            console.error(error);
+          } else {
+            console.log(results);
+          }
+          
+        });
+        
+
       } catch (error) {
         setStatus(`Error: ${error.message}`);
       }
